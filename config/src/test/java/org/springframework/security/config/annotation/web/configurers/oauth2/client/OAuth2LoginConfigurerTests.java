@@ -29,6 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
@@ -43,10 +44,13 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
+import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.config.annotation.SecurityContextChangedListenerConfig;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurerTests.OAuth2LoginConfigCustomWithPostProcessor.SpyObjectPostProcessor;
 import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.config.test.SpringTestContext;
 import org.springframework.security.config.test.SpringTestContextExtension;
@@ -385,6 +389,19 @@ public class OAuth2LoginConfigurerTests {
 	}
 
 	@Test
+	public void oauth2LoginWithCustomAuthorizationRequestParametersAndResolverAsBean() throws Exception {
+		loadConfig(OAuth2LoginConfigCustomAuthorizationRequestResolverBean.class);
+		// @formatter:off
+		// @formatter:on
+		String requestUri = "/oauth2/authorization/google";
+		this.request = new MockHttpServletRequest("GET", requestUri);
+		this.request.setServletPath(requestUri);
+		this.springSecurityFilterChain.doFilter(this.request, this.response, this.filterChain);
+		assertThat(this.response.getRedirectedUrl()).isEqualTo(
+				"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=clientId&scope=openid+profile+email&state=state&redirect_uri=http%3A%2F%2Flocalhost%2Flogin%2Foauth2%2Fcode%2Fgoogle&custom-param1=custom-value1");
+	}
+
+	@Test
 	public void requestWhenOauth2LoginWithCustomAuthorizationRequestParametersThenParametersInRedirectedUrl()
 			throws Exception {
 		loadConfig(OAuth2LoginConfigCustomAuthorizationRequestResolverInLambda.class);
@@ -698,6 +715,22 @@ public class OAuth2LoginConfigurerTests {
 		verifyNoInteractions(clientRegistrationRepository, authorizedClientRepository);
 	}
 
+	// gh-17175
+	@Test
+	public void oauth2LoginWhenAuthenticationProviderPostProcessorThenUses() throws Exception {
+		loadConfig(OAuth2LoginConfigCustomWithPostProcessor.class);
+		// setup authorization request
+		OAuth2AuthorizationRequest authorizationRequest = createOAuth2AuthorizationRequest();
+		this.authorizationRequestRepository.saveAuthorizationRequest(authorizationRequest, this.request, this.response);
+		// setup authentication parameters
+		this.request.setParameter("code", "code123");
+		this.request.setParameter("state", authorizationRequest.getState());
+		// perform test
+		this.springSecurityFilterChain.doFilter(this.request, this.response, this.filterChain);
+		// assertions
+		verify(this.context.getBean(SpyObjectPostProcessor.class).spy).authenticate(any());
+	}
+
 	// gh-16623
 	@Test
 	public void oauth2LoginWithCustomSecurityContextRepository() {
@@ -995,6 +1028,42 @@ public class OAuth2LoginConfigurerTests {
 
 	@Configuration
 	@EnableWebSecurity
+	static class OAuth2LoginConfigCustomAuthorizationRequestResolverBean extends CommonSecurityFilterChainConfig {
+
+		private ClientRegistrationRepository clientRegistrationRepository = new InMemoryClientRegistrationRepository(
+				GOOGLE_CLIENT_REGISTRATION);
+
+		@Bean
+		SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+			// @formatter:off
+			http
+					.oauth2Login()
+					.clientRegistrationRepository(this.clientRegistrationRepository)
+					.authorizationEndpoint();
+			// @formatter:on
+			return super.configureFilterChain(http);
+		}
+
+		@Bean
+		OAuth2AuthorizationRequestResolver resolver() {
+			OAuth2AuthorizationRequestResolver resolver = mock(OAuth2AuthorizationRequestResolver.class);
+			// @formatter:off
+			OAuth2AuthorizationRequest result = OAuth2AuthorizationRequest.authorizationCode()
+					.authorizationUri("https://accounts.google.com/authorize")
+					.clientId("client-id")
+					.state("adsfa")
+					.authorizationRequestUri(
+							"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=clientId&scope=openid+profile+email&state=state&redirect_uri=http%3A%2F%2Flocalhost%2Flogin%2Foauth2%2Fcode%2Fgoogle&custom-param1=custom-value1")
+					.build();
+			given(resolver.resolve(any())).willReturn(result);
+			// @formatter:on
+			return resolver;
+		}
+
+	}
+
+	@Configuration
+	@EnableWebSecurity
 	static class OAuth2LoginConfigCustomAuthorizationRequestResolverInLambda
 			extends CommonLambdaSecurityFilterChainConfig {
 
@@ -1280,6 +1349,52 @@ public class OAuth2LoginConfigurerTests {
 		@Bean
 		OAuth2AuthorizedClientRepository authorizedClientRepository() {
 			return this.authorizedClientRepository;
+		}
+
+	}
+
+	@Configuration
+	@EnableWebSecurity
+	static class OAuth2LoginConfigCustomWithPostProcessor {
+
+		private final ClientRegistrationRepository clientRegistrationRepository = new InMemoryClientRegistrationRepository(
+				GOOGLE_CLIENT_REGISTRATION);
+
+		private final ObjectPostProcessor<AuthenticationProvider> postProcessor = new SpyObjectPostProcessor();
+
+		@Bean
+		SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+			// @formatter:off
+			http
+				.oauth2Login((oauth2Login) -> oauth2Login
+					.clientRegistrationRepository(this.clientRegistrationRepository)
+					.withObjectPostProcessor(this.postProcessor)
+				);
+			// @formatter:on
+			return http.build();
+		}
+
+		@Bean
+		ObjectPostProcessor<AuthenticationProvider> mockPostProcessor() {
+			return this.postProcessor;
+		}
+
+		@Bean
+		HttpSessionOAuth2AuthorizationRequestRepository oauth2AuthorizationRequestRepository() {
+			return new HttpSessionOAuth2AuthorizationRequestRepository();
+		}
+
+		static class SpyObjectPostProcessor implements ObjectPostProcessor<AuthenticationProvider> {
+
+			AuthenticationProvider spy;
+
+			@Override
+			public <O extends AuthenticationProvider> O postProcess(O object) {
+				O spy = Mockito.spy(object);
+				this.spy = spy;
+				return spy;
+			}
+
 		}
 
 	}

@@ -26,6 +26,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -106,6 +107,15 @@ public class DelegatingReactiveAuthenticationManagerTests {
 		DelegatingReactiveAuthenticationManager manager = managerWithContinueOnError();
 
 		assertThat(manager.authenticate(this.authentication).block()).isEqualTo(this.authentication);
+	}
+
+	@Test
+	void whenAccountStatusExceptionThenAuthenticationRequestIsIncluded() {
+		AuthenticationException expected = new LockedException("");
+		given(this.delegate1.authenticate(any())).willReturn(Mono.error(expected));
+		ReactiveAuthenticationManager manager = new DelegatingReactiveAuthenticationManager(this.delegate1);
+		StepVerifier.create(manager.authenticate(this.authentication)).expectError(LockedException.class).verify();
+		assertThat(expected.getAuthenticationRequest()).isEqualTo(this.authentication);
 	}
 
 	private DelegatingReactiveAuthenticationManager managerWithContinueOnError() {

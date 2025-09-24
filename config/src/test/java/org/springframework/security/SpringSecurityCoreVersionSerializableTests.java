@@ -16,6 +16,8 @@
 
 package org.springframework.security;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,10 +34,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,6 +49,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.security.core.SpringSecurityCoreVersion;
+import org.springframework.util.ReflectionUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -73,6 +78,47 @@ class SpringSecurityCoreVersionSerializableTests {
 
 	@ParameterizedTest
 	@MethodSource("getClassesToSerialize")
+	void serializeAndDeserializeAreEqual(Class<?> clazz) throws Exception {
+		Object expected = SerializationSamples.instancioWithDefaults(clazz).create();
+		assertThat(expected).isInstanceOf(clazz);
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+				ObjectOutputStream objectOutputStream = new ObjectOutputStream(out)) {
+			objectOutputStream.writeObject(expected);
+			objectOutputStream.flush();
+
+			try (ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+					ObjectInputStream objectInputStream = new ObjectInputStream(in)) {
+				Object deserialized = objectInputStream.readObject();
+				// Ignore transient fields Event classes extend from EventObject which has
+				// transient source property
+				Set<String> transientFieldNames = new HashSet();
+				Set<Class<?>> visitedClasses = new HashSet();
+				collectTransientFieldNames(transientFieldNames, visitedClasses, clazz);
+				assertThat(deserialized).usingRecursiveComparison()
+					.ignoringFields(transientFieldNames.toArray(new String[0]))
+					// RuntimeExceptions do not fully work but ensure the message does
+					.withComparatorForType((lhs, rhs) -> ObjectUtils.compare(lhs.getMessage(), rhs.getMessage()),
+							RuntimeException.class)
+					.isEqualTo(expected);
+			}
+		}
+	}
+
+	private static void collectTransientFieldNames(Set<String> transientFieldNames, Set<Class<?>> visitedClasses,
+			Class<?> clazz) {
+		if (!visitedClasses.add(clazz) || clazz.isPrimitive()) {
+			return;
+		}
+		ReflectionUtils.doWithFields(clazz, (field) -> {
+			if (Modifier.isTransient(field.getModifiers())) {
+				transientFieldNames.add(field.getName());
+			}
+			collectTransientFieldNames(transientFieldNames, visitedClasses, field.getType());
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource("getClassesToSerialize")
 	@Disabled("This method should only be used to serialize the classes once")
 	void serializeCurrentVersionClasses(Class<?> clazz) throws Exception {
 		Files.createDirectories(currentVersionFolder);
@@ -82,10 +128,10 @@ class SpringSecurityCoreVersionSerializableTests {
 			return;
 		}
 		Files.createFile(filePath);
-		Object instance = SerializationSamples.instancioWithDefaults(clazz).create();
-		assertThat(instance).isInstanceOf(clazz);
 		try (FileOutputStream fileOutputStream = new FileOutputStream(file);
 				ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream)) {
+			Object instance = SerializationSamples.instancioWithDefaults(clazz).create();
+			assertThat(instance).isInstanceOf(clazz);
 			objectOutputStream.writeObject(instance);
 			objectOutputStream.flush();
 		}

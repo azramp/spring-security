@@ -565,7 +565,7 @@ public final class ObservationFilterChainDecorator implements FilterChainProxy.F
 
 		private static final String CHAIN_SIZE_NAME = "spring.security.filterchain.size";
 
-		private static final String FILTER_SECTION_NAME = "security.security.reached.filter.section";
+		private static final String FILTER_SECTION_NAME = "spring.security.reached.filter.section";
 
 		private static final String FILTER_NAME = "spring.security.reached.filter.name";
 

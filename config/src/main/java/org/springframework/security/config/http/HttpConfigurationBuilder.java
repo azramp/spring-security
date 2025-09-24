@@ -51,6 +51,7 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.access.AuthorizationManagerWebInvocationPrivilegeEvaluator;
 import org.springframework.security.web.access.DefaultWebInvocationPrivilegeEvaluator;
 import org.springframework.security.web.access.HandlerMappingIntrospectorRequestTransformer;
+import org.springframework.security.web.access.PathPatternRequestTransformer;
 import org.springframework.security.web.access.channel.ChannelDecisionManagerImpl;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.access.channel.InsecureChannelProcessor;
@@ -82,7 +83,7 @@ import org.springframework.security.web.session.ForceEagerSessionCreationFilter;
 import org.springframework.security.web.session.SessionManagementFilter;
 import org.springframework.security.web.session.SimpleRedirectInvalidSessionStrategy;
 import org.springframework.security.web.session.SimpleRedirectSessionInformationExpiredStrategy;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.transport.HttpsRedirectFilter;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -121,6 +122,10 @@ class HttpConfigurationBuilder {
 	private static final String ATT_OBSERVATION_REGISTRY_REF = "observation-registry-ref";
 
 	private static final String ATT_SESSION_AUTH_STRATEGY_REF = "session-authentication-strategy-ref";
+
+	private static final String ATT_MAX_SESSIONS_REF = "max-sessions-ref";
+
+	private static final String ATT_MAX_SESSIONS = "max-sessions";
 
 	private static final String ATT_SESSION_AUTH_ERROR_URL = "session-authentication-error-url";
 
@@ -171,6 +176,8 @@ class HttpConfigurationBuilder {
 	private final MatcherType matcherType;
 
 	private BeanDefinition cpf;
+
+	private BeanDefinition httpsRedirectFilter;
 
 	private BeanDefinition securityContextPersistenceFilter;
 
@@ -248,6 +255,7 @@ class HttpConfigurationBuilder {
 		createServletApiFilter(authenticationManager);
 		createJaasApiFilter();
 		createChannelProcessingFilter();
+		createHttpsRedirectFilter();
 		createFilterSecurity(authenticationManager);
 		createAddHeadersFilter();
 		createCorsFilter();
@@ -485,9 +493,15 @@ class HttpConfigurationBuilder {
 			concurrentSessionStrategy.addConstructorArgValue(this.sessionRegistryRef);
 			String maxSessions = this.pc.getReaderContext()
 				.getEnvironment()
-				.resolvePlaceholders(sessionCtrlElt.getAttribute("max-sessions"));
+				.resolvePlaceholders(sessionCtrlElt.getAttribute(ATT_MAX_SESSIONS));
 			if (StringUtils.hasText(maxSessions)) {
 				concurrentSessionStrategy.addPropertyValue("maximumSessions", maxSessions);
+			}
+			String maxSessionsRef = this.pc.getReaderContext()
+				.getEnvironment()
+				.resolvePlaceholders(sessionCtrlElt.getAttribute(ATT_MAX_SESSIONS_REF));
+			if (StringUtils.hasText(maxSessionsRef)) {
+				concurrentSessionStrategy.addPropertyReference("maximumSessions", maxSessionsRef);
 			}
 			String exceptionIfMaximumExceeded = sessionCtrlElt.getAttribute("error-if-maximum-exceeded");
 			if (StringUtils.hasText(exceptionIfMaximumExceeded)) {
@@ -591,6 +605,12 @@ class HttpConfigurationBuilder {
 				.error("Cannot use 'expired-url' attribute and 'expired-session-strategy-ref'" + " attribute together.",
 						source);
 		}
+		String maxSessions = element.getAttribute(ATT_MAX_SESSIONS);
+		String maxSessionsRef = element.getAttribute(ATT_MAX_SESSIONS_REF);
+		if (StringUtils.hasText(maxSessions) && StringUtils.hasText(maxSessionsRef)) {
+			this.pc.getReaderContext()
+				.error("Cannot use 'max-sessions' attribute and 'max-sessions-ref' attribute together.", source);
+		}
 		if (StringUtils.hasText(expiryUrl)) {
 			BeanDefinitionBuilder expiredSessionBldr = BeanDefinitionBuilder
 				.rootBeanDefinition(SimpleRedirectSessionInformationExpiredStrategy.class);
@@ -640,6 +660,19 @@ class HttpConfigurationBuilder {
 		}
 	}
 
+	private void createHttpsRedirectFilter() {
+		String ref = this.httpElt
+			.getAttribute(HttpSecurityBeanDefinitionParser.ATT_REDIRECT_TO_HTTPS_REQUEST_MATCHER_REF);
+		if (!StringUtils.hasText(ref)) {
+			return;
+		}
+		RootBeanDefinition channelFilter = new RootBeanDefinition(HttpsRedirectFilter.class);
+		channelFilter.getPropertyValues().addPropertyValue("requestMatcher", new RuntimeBeanReference(ref));
+		channelFilter.getPropertyValues().addPropertyValue("portMapper", this.portMapper);
+		this.httpsRedirectFilter = channelFilter;
+	}
+
+	@Deprecated
 	private void createChannelProcessingFilter() {
 		ManagedMap<BeanMetadataElement, BeanDefinition> channelRequestMap = parseInterceptUrlsForChannelSecurity();
 		if (channelRequestMap.isEmpty()) {
@@ -675,7 +708,9 @@ class HttpConfigurationBuilder {
 	 * Parses the intercept-url elements to obtain the map used by channel security. This
 	 * will be empty unless the <tt>requires-channel</tt> attribute has been used on a URL
 	 * path.
+	 * @deprecated please use {@link #createHttpsRedirectFilter} instead
 	 */
+	@Deprecated
 	private ManagedMap<BeanMetadataElement, BeanDefinition> parseInterceptUrlsForChannelSecurity() {
 		ManagedMap<BeanMetadataElement, BeanDefinition> channelRequestMap = new ManagedMap<>();
 		for (Element urlElt : this.interceptUrls) {
@@ -716,7 +751,7 @@ class HttpConfigurationBuilder {
 				requestCacheBldr.addPropertyValue("portResolver", this.portResolver);
 				if (this.csrfFilter != null) {
 					BeanDefinitionBuilder requestCacheMatcherBldr = BeanDefinitionBuilder
-						.rootBeanDefinition(AntPathRequestMatcher.class);
+						.rootBeanDefinition(RequestMatcherFactoryBean.class);
 					requestCacheMatcherBldr.addConstructorArgValue("/**");
 					requestCacheMatcherBldr.addConstructorArgValue("GET");
 					requestCacheBldr.addPropertyValue("requestMatcher", requestCacheMatcherBldr.getBeanDefinition());
@@ -881,6 +916,9 @@ class HttpConfigurationBuilder {
 		if (this.disableUrlRewriteFilter != null) {
 			filters.add(new OrderDecorator(this.disableUrlRewriteFilter, SecurityFilters.DISABLE_ENCODE_URL_FILTER));
 		}
+		if (this.httpsRedirectFilter != null) {
+			filters.add(new OrderDecorator(this.httpsRedirectFilter, SecurityFilters.HTTPS_REDIRECT_FILTER));
+		}
 		if (this.cpf != null) {
 			filters.add(new OrderDecorator(this.cpf, SecurityFilters.CHANNEL_FILTER));
 		}
@@ -937,10 +975,17 @@ class HttpConfigurationBuilder {
 		@Override
 		public AuthorizationManagerWebInvocationPrivilegeEvaluator.HttpServletRequestTransformer getObject()
 				throws Exception {
+			AuthorizationManagerWebInvocationPrivilegeEvaluator.HttpServletRequestTransformer requestTransformer = this.applicationContext
+				.getBeanProvider(
+						AuthorizationManagerWebInvocationPrivilegeEvaluator.HttpServletRequestTransformer.class)
+				.getIfUnique();
+			if (requestTransformer != null) {
+				return requestTransformer;
+			}
 			HandlerMappingIntrospector hmi = this.applicationContext.getBeanProvider(HandlerMappingIntrospector.class)
 				.getIfAvailable();
 			return (hmi != null) ? new HandlerMappingIntrospectorRequestTransformer(hmi)
-					: AuthorizationManagerWebInvocationPrivilegeEvaluator.HttpServletRequestTransformer.IDENTITY;
+					: new PathPatternRequestTransformer();
 		}
 
 		@Override

@@ -54,7 +54,7 @@ public class HttpStatusServerAccessDeniedHandler implements ServerAccessDeniedHa
 			response.setStatusCode(this.httpStatus);
 			response.getHeaders().setContentType(MediaType.TEXT_PLAIN);
 			DataBufferFactory dataBufferFactory = response.bufferFactory();
-			DataBuffer buffer = dataBufferFactory.wrap(ex.getMessage().getBytes(Charset.defaultCharset()));
+			DataBuffer buffer = dataBufferFactory.wrap("Access Denied".getBytes(Charset.defaultCharset()));
 			return response.writeWith(Mono.just(buffer)).doOnError((error) -> DataBufferUtils.release(buffer));
 		});
 	}

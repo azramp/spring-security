@@ -40,12 +40,12 @@ import org.springframework.util.StringUtils;
  * @since 5.2
  * @see ReactiveOAuth2AuthorizedClientProvider
  * @see WebClientReactivePasswordTokenResponseClient
- * @deprecated The latest OAuth 2.0 Security Best Current Practice disallows the use of
- * the Resource Owner Password Credentials grant. See reference <a target="_blank" href=
- * "https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics-19#section-2.4">OAuth
- * 2.0 Security Best Current Practice.</a>
+ * @deprecated The OAuth 2.0 Security Best Current Practice disallows the use of the
+ * Resource Owner Password Credentials grant. See reference <a target="_blank" href=
+ * "https://datatracker.ietf.org/doc/html/rfc9700#section-2.4">OAuth 2.0 Security Best
+ * Current Practice.</a>
  */
-@Deprecated
+@Deprecated(since = "5.8", forRemoval = true)
 public final class PasswordReactiveOAuth2AuthorizedClientProvider implements ReactiveOAuth2AuthorizedClientProvider {
 
 	private ReactiveOAuth2AccessTokenResponseClient<OAuth2PasswordGrantRequest> accessTokenResponseClient = new WebClientReactivePasswordTokenResponseClient();

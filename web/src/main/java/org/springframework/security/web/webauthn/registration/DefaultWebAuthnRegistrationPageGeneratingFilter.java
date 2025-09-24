@@ -34,7 +34,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.security.web.webauthn.api.CredentialRecord;
 import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;
@@ -52,7 +52,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 public class DefaultWebAuthnRegistrationPageGeneratingFilter extends OncePerRequestFilter {
 
-	private RequestMatcher matcher = AntPathRequestMatcher.antMatcher(HttpMethod.GET, "/webauthn/register");
+	private RequestMatcher matcher = PathPatternRequestMatcher.withDefaults()
+		.matcher(HttpMethod.GET, "/webauthn/register");
 
 	private final PublicKeyCredentialUserEntityRepository userEntities;
 

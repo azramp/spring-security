@@ -178,7 +178,7 @@ public class FormLoginBeanDefinitionParser {
 		}
 		this.loginProcessingUrl = loginUrl;
 		BeanDefinitionBuilder matcherBuilder = BeanDefinitionBuilder
-			.rootBeanDefinition("org.springframework.security.web.util.matcher.AntPathRequestMatcher");
+			.rootBeanDefinition(RequestMatcherFactoryBean.class);
 		matcherBuilder.addConstructorArgValue(loginUrl);
 		if (this.loginMethod != null) {
 			matcherBuilder.addConstructorArgValue("POST");

@@ -113,6 +113,8 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authoriza
 import org.springframework.security.oauth2.client.authentication.OAuth2LoginAuthenticationToken;
 import org.springframework.security.oauth2.client.authentication.TestOAuth2AuthenticationTokens;
 import org.springframework.security.oauth2.client.authentication.TestOAuth2AuthorizationCodeAuthenticationTokens;
+import org.springframework.security.oauth2.client.event.OAuth2AuthorizedClientRefreshedEvent;
+import org.springframework.security.oauth2.client.oidc.authentication.event.OidcUserRefreshedEvent;
 import org.springframework.security.oauth2.client.oidc.authentication.logout.OidcLogoutToken;
 import org.springframework.security.oauth2.client.oidc.authentication.logout.TestOidcLogoutTokens;
 import org.springframework.security.oauth2.client.oidc.session.OidcSessionInformation;
@@ -133,6 +135,7 @@ import org.springframework.security.oauth2.core.TestOAuth2AuthenticatedPrincipal
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationExchange;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponse;
+import org.springframework.security.oauth2.core.endpoint.TestOAuth2AccessTokenResponses;
 import org.springframework.security.oauth2.core.endpoint.TestOAuth2AuthorizationExchanges;
 import org.springframework.security.oauth2.core.endpoint.TestOAuth2AuthorizationRequests;
 import org.springframework.security.oauth2.core.endpoint.TestOAuth2AuthorizationResponses;
@@ -157,6 +160,7 @@ import org.springframework.security.oauth2.server.resource.BearerTokenErrors;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthentication;
 import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.authentication.DPoPAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.introspection.BadOpaqueTokenException;
 import org.springframework.security.oauth2.server.resource.introspection.OAuth2IntrospectionAuthenticatedPrincipal;
@@ -222,9 +226,9 @@ import org.springframework.security.web.webauthn.api.PublicKeyCredentialType;
 import org.springframework.security.web.webauthn.api.PublicKeyCredentialUserEntity;
 import org.springframework.security.web.webauthn.api.TestAuthenticationAssertionResponses;
 import org.springframework.security.web.webauthn.api.TestBytes;
-import org.springframework.security.web.webauthn.api.TestPublicKeyCredential;
 import org.springframework.security.web.webauthn.api.TestPublicKeyCredentialRequestOptions;
-import org.springframework.security.web.webauthn.api.TestPublicKeyCredentialUserEntity;
+import org.springframework.security.web.webauthn.api.TestPublicKeyCredentialUserEntities;
+import org.springframework.security.web.webauthn.api.TestPublicKeyCredentials;
 import org.springframework.security.web.webauthn.api.UserVerificationRequirement;
 import org.springframework.security.web.webauthn.authentication.WebAuthnAuthentication;
 import org.springframework.security.web.webauthn.authentication.WebAuthnAuthenticationRequestToken;
@@ -257,11 +261,13 @@ final class SerializationSamples {
 				(r) -> new ReactiveSessionInformation(user, r.alphanumeric(4), Instant.ofEpochMilli(1704378933936L)));
 		generatorByClassName.put(OAuth2AccessToken.class, (r) -> TestOAuth2AccessTokens.scopes("scope"));
 		generatorByClassName.put(OAuth2DeviceCode.class,
-				(r) -> new OAuth2DeviceCode("token", Instant.now(), Instant.now()));
+				(r) -> new OAuth2DeviceCode("token", Instant.now(), Instant.now().plusSeconds(1)));
 		generatorByClassName.put(OAuth2RefreshToken.class,
-				(r) -> new OAuth2RefreshToken("refreshToken", Instant.now(), Instant.now()));
+				(r) -> new OAuth2RefreshToken("refreshToken", Instant.now(), Instant.now().plusSeconds(1)));
 		generatorByClassName.put(OAuth2UserCode.class,
-				(r) -> new OAuth2UserCode("token", Instant.now(), Instant.now()));
+				(r) -> new OAuth2UserCode("token", Instant.now(), Instant.now().plusSeconds(1)));
+		generatorByClassName.put(ClientRegistration.ClientSettings.class,
+				(r) -> ClientRegistration.ClientSettings.builder().build());
 		generatorByClassName.put(DefaultOidcUser.class, (r) -> TestOidcUsers.create());
 		generatorByClassName.put(OidcUserAuthority.class,
 				(r) -> new OidcUserAuthority(TestOidcIdTokens.idToken().build(),
@@ -315,6 +321,13 @@ final class SerializationSamples {
 						new RuntimeException()));
 		generatorByClassName.put(ClientAuthorizationRequiredException.class,
 				(r) -> new ClientAuthorizationRequiredException("id"));
+		generatorByClassName
+			.put(OAuth2AuthorizedClientRefreshedEvent.class, (r) -> new OAuth2AuthorizedClientRefreshedEvent(
+					TestOAuth2AccessTokenResponses.accessTokenResponse().build(),
+					new OAuth2AuthorizedClient(clientRegistration, "principal", TestOAuth2AccessTokens.noScopes())));
+		generatorByClassName.put(OidcUserRefreshedEvent.class,
+				(r) -> new OidcUserRefreshedEvent(TestOAuth2AccessTokenResponses.accessTokenResponse().build(),
+						TestOidcUsers.create(), TestOidcUsers.create(), authentication));
 
 		// oauth2-jose
 		generatorByClassName.put(BadJwtException.class, (r) -> new BadJwtException("token", new RuntimeException()));
@@ -362,6 +375,8 @@ final class SerializationSamples {
 				(r) -> new BadOpaqueTokenException("message", new RuntimeException()));
 		generatorByClassName.put(OAuth2IntrospectionException.class,
 				(r) -> new OAuth2IntrospectionException("message", new RuntimeException()));
+		generatorByClassName.put(DPoPAuthenticationToken.class,
+				(r) -> applyDetails(new DPoPAuthenticationToken("token", "proof", "method", "uri")));
 
 		// config
 		generatorByClassName.put(AlreadyBuiltException.class, (r) -> new AlreadyBuiltException("message"));
@@ -585,6 +600,7 @@ final class SerializationSamples {
 			request.addPreferredLocale(Locale.ENGLISH);
 			return new SimpleSavedRequest(new DefaultSavedRequest(request, new PortResolverImpl(), "continue"));
 		});
+
 		generatorByClassName.put(HttpSessionIdChangedEvent.class,
 				(r) -> new HttpSessionIdChangedEvent(new MockHttpSession(), "1"));
 
@@ -626,7 +642,7 @@ final class SerializationSamples {
 		AuthenticationExtensionsClientOutputs outputs = new ImmutableAuthenticationExtensionsClientOutputs(credentialOutput);
 		AuthenticatorAssertionResponse response = TestAuthenticationAssertionResponses.createAuthenticatorAssertionResponse()
 				.build();
-		PublicKeyCredential<AuthenticatorAssertionResponse> credential = TestPublicKeyCredential.createPublicKeyCredential(
+		PublicKeyCredential<AuthenticatorAssertionResponse> credential = TestPublicKeyCredentials.createPublicKeyCredential(
 						response, outputs)
 				.build();
 		RelyingPartyAuthenticationRequest authRequest = new RelyingPartyAuthenticationRequest(
@@ -644,9 +660,9 @@ final class SerializationSamples {
 		generatorByClassName.put(AuthenticatorAttachment.class, (r) -> AuthenticatorAttachment.PLATFORM);
 		// @formatter:on
 		generatorByClassName.put(ImmutablePublicKeyCredentialUserEntity.class,
-				(r) -> TestPublicKeyCredentialUserEntity.userEntity().id(TestBytes.get()).build());
+				(r) -> TestPublicKeyCredentialUserEntities.userEntity().id(TestBytes.get()).build());
 		generatorByClassName.put(WebAuthnAuthentication.class, (r) -> {
-			PublicKeyCredentialUserEntity userEntity = TestPublicKeyCredentialUserEntity.userEntity()
+			PublicKeyCredentialUserEntity userEntity = TestPublicKeyCredentialUserEntities.userEntity()
 				.id(TestBytes.get())
 				.build();
 			List<GrantedAuthority> authorities = AuthorityUtils.createAuthorityList("ROLE_USER");
@@ -655,6 +671,7 @@ final class SerializationSamples {
 			return webAuthnAuthentication;
 		});
 		// @formatter:on
+
 		generatorByClassName.put(CredentialPropertiesOutput.ExtensionOutput.class,
 				(r) -> new CredentialPropertiesOutput(true).getOutput());
 

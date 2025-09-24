@@ -49,7 +49,7 @@ import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.logout.CompositeLogoutHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -245,7 +245,8 @@ public final class Saml2LogoutRequestFilter extends OncePerRequestFilter {
 
 		private final RelyingPartyRegistrationResolver relyingPartyRegistrationResolver;
 
-		private RequestMatcher logoutRequestMatcher = new AntPathRequestMatcher("/logout/saml2/slo");
+		private RequestMatcher logoutRequestMatcher = PathPatternRequestMatcher.withDefaults()
+			.matcher("/logout/saml2/slo");
 
 		Saml2AssertingPartyLogoutRequestResolver(RelyingPartyRegistrationResolver relyingPartyRegistrationResolver) {
 			this.relyingPartyRegistrationResolver = relyingPartyRegistrationResolver;

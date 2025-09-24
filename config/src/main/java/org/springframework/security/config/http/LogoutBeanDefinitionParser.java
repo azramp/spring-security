@@ -134,7 +134,7 @@ class LogoutBeanDefinitionParser implements BeanDefinitionParser {
 
 	private BeanDefinition getLogoutRequestMatcher(String logoutUrl) {
 		BeanDefinitionBuilder matcherBuilder = BeanDefinitionBuilder
-			.rootBeanDefinition("org.springframework.security.web.util.matcher.AntPathRequestMatcher");
+			.rootBeanDefinition(RequestMatcherFactoryBean.class);
 		matcherBuilder.addConstructorArgValue(logoutUrl);
 		if (this.csrfEnabled) {
 			matcherBuilder.addConstructorArgValue("POST");

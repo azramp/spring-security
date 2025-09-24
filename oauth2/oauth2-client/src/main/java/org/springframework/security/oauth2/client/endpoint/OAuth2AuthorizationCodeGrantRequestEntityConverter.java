@@ -38,7 +38,7 @@ import org.springframework.util.MultiValueMap;
  * @see RequestEntity
  * @deprecated Use {@link DefaultOAuth2TokenRequestParametersConverter} instead
  */
-@Deprecated(since = "6.4")
+@Deprecated(since = "6.4", forRemoval = true)
 public class OAuth2AuthorizationCodeGrantRequestEntityConverter
 		extends AbstractOAuth2AuthorizationGrantRequestEntityConverter<OAuth2AuthorizationCodeGrantRequest> {
 

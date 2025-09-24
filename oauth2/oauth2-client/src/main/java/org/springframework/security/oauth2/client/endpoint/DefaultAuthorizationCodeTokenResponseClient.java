@@ -54,7 +54,7 @@ import org.springframework.web.client.RestTemplate;
  * (Authorization Code Grant)</a>
  * @deprecated Use {@link RestClientAuthorizationCodeTokenResponseClient} instead
  */
-@Deprecated(since = "6.4")
+@Deprecated(since = "6.4", forRemoval = true)
 public final class DefaultAuthorizationCodeTokenResponseClient
 		implements OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> {
 

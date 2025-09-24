@@ -32,7 +32,7 @@ import org.springframework.security.saml2.provider.service.metadata.Saml2Metadat
 import org.springframework.security.saml2.provider.service.metadata.Saml2MetadataResponseResolver;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -146,8 +146,8 @@ public final class Saml2MetadataFilter extends OncePerRequestFilter {
 
 		private final RelyingPartyRegistrationResolver registrations;
 
-		private RequestMatcher requestMatcher = new AntPathRequestMatcher(
-				"/saml2/service-provider-metadata/{registrationId}");
+		private RequestMatcher requestMatcher = PathPatternRequestMatcher.withDefaults()
+			.matcher("/saml2/service-provider-metadata/{registrationId}");
 
 		private final Saml2MetadataResolver metadataResolver;
 

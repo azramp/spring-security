@@ -17,10 +17,12 @@
 package org.springframework.security.authentication.ott;
 
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.util.Assert;
 
 /**
@@ -52,11 +54,16 @@ public final class OneTimeTokenAuthenticationProvider implements AuthenticationP
 		if (consumed == null) {
 			throw new InvalidOneTimeTokenException("Invalid token");
 		}
-		UserDetails user = this.userDetailsService.loadUserByUsername(consumed.getUsername());
-		OneTimeTokenAuthenticationToken authenticated = OneTimeTokenAuthenticationToken.authenticated(user,
-				user.getAuthorities());
-		authenticated.setDetails(otpAuthenticationToken.getDetails());
-		return authenticated;
+		try {
+			UserDetails user = this.userDetailsService.loadUserByUsername(consumed.getUsername());
+			OneTimeTokenAuthenticationToken authenticated = OneTimeTokenAuthenticationToken.authenticated(user,
+					user.getAuthorities());
+			authenticated.setDetails(otpAuthenticationToken.getDetails());
+			return authenticated;
+		}
+		catch (UsernameNotFoundException ex) {
+			throw new BadCredentialsException("Failed to authenticate the one-time token");
+		}
 	}
 
 	@Override

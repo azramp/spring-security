@@ -49,7 +49,7 @@ public class SubjectDnX509PrincipalExtractorTests {
 	}
 
 	@Test
-	public void defaultCNPatternReturnsExcpectedPrincipal() throws Exception {
+	public void defaultCNPatternReturnsExpectedPrincipal() throws Exception {
 		Object principal = this.extractor.extractPrincipal(X509TestUtils.buildTestCertificate());
 		assertThat(principal).isEqualTo("Luke Taylor");
 	}

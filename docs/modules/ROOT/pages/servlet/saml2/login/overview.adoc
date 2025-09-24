@@ -49,7 +49,7 @@ This filter calls its configured `AuthenticationConverter` to create a `Saml2Aut
 This converter additionally resolves the <<servlet-saml2login-relyingpartyregistration, `RelyingPartyRegistration`>> and supplies it to `Saml2AuthenticationToken`.
 
 image:{icondir}/number_2.png[] Next, the filter passes the token to its configured xref:servlet/authentication/architecture.adoc#servlet-authentication-providermanager[`AuthenticationManager`].
-By default, it uses the <<servlet-saml2login-architecture,`OpenSamlAuthenticationProvider`>>.
+By default, it uses the <<servlet-saml2login-architecture,`OpenSaml4AuthenticationProvider`>>.
 
 image:{icondir}/number_3.png[] If authentication fails, then _Failure_.
 
@@ -188,9 +188,9 @@ To achieve this, any interfaces or classes where Spring Security uses OpenSAML i
 This makes it possible for you to switch out OpenSAML for some other library or an unsupported version of OpenSAML.
 
 As a natural outcome of these two goals, Spring Security's SAML API is quite small relative to other modules.
-Instead, such classes as `OpenSamlAuthenticationRequestFactory` and `OpenSamlAuthenticationProvider` expose `Converter` implementations that customize various steps in the authentication process.
+Instead, such classes as `OpenSamlXAuthenticationRequestFactory` and `OpenSamlXAuthenticationProvider` expose `Converter` implementations that customize various steps in the authentication process.
 
-For example, once your application receives a `SAMLResponse` and delegates to `Saml2WebSsoAuthenticationFilter`, the filter delegates to `OpenSamlAuthenticationProvider`:
+For example, once your application receives a `SAMLResponse` and delegates to `Saml2WebSsoAuthenticationFilter`, the filter delegates to `OpenSamlXAuthenticationProvider`:
 
 .Authenticating an OpenSAML `Response`
 image:{figures}/opensamlauthenticationprovider.png[]
@@ -643,7 +643,7 @@ class MyCustomSecurityConfiguration  {
 ----
 ======
 
-In this way, the set of `RelyingPartyRegistration`s will refresh based on {spring-framework-reference-url}integration/cache/store-configuration.html[the cache's eviction schedule].
+In this way, the set of ``RelyingPartyRegistration``s will refresh based on {spring-framework-reference-url}integration/cache/store-configuration.html[the cache's eviction schedule].
 
 [[servlet-saml2login-relyingpartyregistration]]
 == RelyingPartyRegistration
@@ -976,9 +976,9 @@ As seen so far, Spring Security resolves the `RelyingPartyRegistration` by looki
 Depending on the use case, a number of other strategies are also employed to derive one.
 For example:
 
-* For processing `<saml2:Response>`s, the `RelyingPartyRegistration` is looked up from the associated `<saml2:AuthRequest>` or from the `<saml2:Response#Issuer>` element
-* For processing `<saml2:LogoutRequest>`s, the `RelyingPartyRegistration` is looked up from the currently logged in user or from the `<saml2:LogoutRequest#Issuer>` element
-* For publishing metadata, the `RelyingPartyRegistration`s are looked up from any repository that also implements `Iterable<RelyingPartyRegistration>`
+* For processing ``<saml2:Response>``s, the `RelyingPartyRegistration` is looked up from the associated `<saml2:AuthRequest>` or from the `<saml2:Response#Issuer>` element
+* For processing ``<saml2:LogoutRequest>``s, the `RelyingPartyRegistration` is looked up from the currently logged in user or from the `<saml2:LogoutRequest#Issuer>` element
+* For publishing metadata, the ``RelyingPartyRegistration``s are looked up from any repository that also implements `Iterable<RelyingPartyRegistration>`
 
 When this needs adjustment, you can turn to the specific components for each of these endpoints targeted at customizing this:
 

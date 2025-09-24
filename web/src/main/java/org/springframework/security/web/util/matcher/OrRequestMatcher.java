@@ -18,6 +18,7 @@ package org.springframework.security.web.util.matcher;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -79,6 +80,23 @@ public final class OrRequestMatcher implements RequestMatcher {
 			}
 		}
 		return MatchResult.notMatch();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		OrRequestMatcher that = (OrRequestMatcher) o;
+		return Objects.equals(this.requestMatchers, that.requestMatchers);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.requestMatchers);
 	}
 
 	@Override

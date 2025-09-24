@@ -59,7 +59,7 @@ public class DefaultResourcesFilterTests {
 		@Test
 		void toStringPrintsPathAndResource() {
 			assertThat(this.cssFilter.toString()).isEqualTo(
-					"DefaultResourcesFilter [matcher=Ant [pattern='/default-ui.css', GET], resource=org/springframework/security/default-ui.css]");
+					"DefaultResourcesFilter [matcher=PathPattern [GET /default-ui.css], resource=org/springframework/security/default-ui.css]");
 		}
 
 	}
@@ -89,7 +89,7 @@ public class DefaultResourcesFilterTests {
 		@Test
 		void toStringPrintsPathAndResource() {
 			assertThat(this.webauthnFilter.toString()).isEqualTo(
-					"DefaultResourcesFilter [matcher=Ant [pattern='/login/webauthn.js', GET], resource=org/springframework/security/spring-security-webauthn.js]");
+					"DefaultResourcesFilter [matcher=PathPattern [GET /login/webauthn.js], resource=org/springframework/security/spring-security-webauthn.js]");
 		}
 
 	}

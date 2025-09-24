@@ -135,6 +135,7 @@ public interface HttpSecurityBuilder<H extends HttpSecurityBuilder<H>>
 	 * <li>{@link DisableEncodeUrlFilter}</li>
 	 * <li>{@link ForceEagerSessionCreationFilter}</li>
 	 * <li>{@link ChannelProcessingFilter}</li>
+	 * <li>{@link org.springframework.security.web.transport.HttpsRedirectFilter}</li>
 	 * <li>{@link WebAsyncManagerIntegrationFilter}</li>
 	 * <li>{@link SecurityContextHolderFilter}</li>
 	 * <li>{@link SecurityContextPersistenceFilter}</li>

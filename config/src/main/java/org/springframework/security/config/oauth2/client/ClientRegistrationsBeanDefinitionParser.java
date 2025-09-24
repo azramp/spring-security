@@ -125,7 +125,7 @@ public final class ClientRegistrationsBeanDefinitionParser implements BeanDefini
 			getOptionalIfNotEmpty(parserContext, clientRegistrationElt.getAttribute(ATT_CLIENT_SECRET))
 				.ifPresent(builder::clientSecret);
 			getOptionalIfNotEmpty(parserContext, clientRegistrationElt.getAttribute(ATT_CLIENT_AUTHENTICATION_METHOD))
-				.map(ClientAuthenticationMethod::new)
+				.map(ClientAuthenticationMethod::valueOf)
 				.ifPresent(builder::clientAuthenticationMethod);
 			getOptionalIfNotEmpty(parserContext, clientRegistrationElt.getAttribute(ATT_AUTHORIZATION_GRANT_TYPE))
 				.map(AuthorizationGrantType::new)

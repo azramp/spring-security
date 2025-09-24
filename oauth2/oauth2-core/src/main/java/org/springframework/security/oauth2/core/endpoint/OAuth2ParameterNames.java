@@ -230,6 +230,13 @@ public final class OAuth2ParameterNames {
 	 */
 	public static final String ACTOR_TOKEN_TYPE = "actor_token_type";
 
+	/**
+	 * {@code request_uri} - used in Pushed Authorization Response and Authorization
+	 * Request.
+	 * @since 6.5
+	 */
+	public static final String REQUEST_URI = "request_uri";
+
 	private OAuth2ParameterNames() {
 	}
 

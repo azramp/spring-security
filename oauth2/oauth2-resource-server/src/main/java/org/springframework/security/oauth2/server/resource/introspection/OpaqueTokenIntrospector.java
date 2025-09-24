@@ -16,8 +16,6 @@
 
 package org.springframework.security.oauth2.server.resource.introspection;
 
-import java.util.Map;
-
 import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 
 /**
@@ -40,7 +38,8 @@ public interface OpaqueTokenIntrospector {
 	/**
 	 * Introspect and verify the given token, returning its attributes.
 	 *
-	 * Returning a {@link Map} is indicative that the token is valid.
+	 * Returning a {@link OAuth2AuthenticatedPrincipal} is indicative that the token is
+	 * valid.
 	 * @param token the token to introspect
 	 * @return the token's attributes
 	 */

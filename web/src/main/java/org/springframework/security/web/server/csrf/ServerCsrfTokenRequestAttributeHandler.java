@@ -16,8 +16,11 @@
 
 package org.springframework.security.web.server.csrf;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Mono;
 
+import org.springframework.core.log.LogMessage;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FormFieldPart;
@@ -31,9 +34,12 @@ import org.springframework.web.server.ServerWebExchange;
  * resolving the token value as either a form data value or header of the request.
  *
  * @author Steve Riesenberg
+ * @author Yoobin Yoon
  * @since 5.8
  */
 public class ServerCsrfTokenRequestAttributeHandler implements ServerCsrfTokenRequestHandler {
+
+	private static final Log logger = LogFactory.getLog(ServerCsrfTokenRequestAttributeHandler.class);
 
 	private boolean isTokenFromMultipartDataEnabled;
 
@@ -42,6 +48,7 @@ public class ServerCsrfTokenRequestAttributeHandler implements ServerCsrfTokenRe
 		Assert.notNull(exchange, "exchange cannot be null");
 		Assert.notNull(csrfToken, "csrfToken cannot be null");
 		exchange.getAttributes().put(CsrfToken.class.getName(), csrfToken);
+		logger.trace(LogMessage.format("Wrote a CSRF token to the [%s] exchange attribute", CsrfToken.class.getName()));
 	}
 
 	@Override

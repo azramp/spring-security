@@ -571,7 +571,7 @@ public final class SecurityMockServerConfigurers {
 
 		/**
 		 * Mutate the attributes using the given {@link Consumer}
-		 * @param attributesConsumer The {@link Consumer} for mutating the {@Map} of
+		 * @param attributesConsumer The {@link Consumer} for mutating the {@code Map} of
 		 * attributes
 		 * @return the {@link OpaqueTokenMutator} for further configuration
 		 */
@@ -750,7 +750,7 @@ public final class SecurityMockServerConfigurers {
 
 		/**
 		 * Mutate the attributes using the given {@link Consumer}
-		 * @param attributesConsumer The {@link Consumer} for mutating the {@Map} of
+		 * @param attributesConsumer The {@link Consumer} for mutating the {@code Map} of
 		 * attributes
 		 * @return the {@link OAuth2LoginMutator} for further configuration
 		 */

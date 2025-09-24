@@ -81,6 +81,8 @@ public class HttpSecurityBeanDefinitionParser implements BeanDefinitionParser {
 
 	static final String ATT_REQUEST_MATCHER_REF = "request-matcher-ref";
 
+	static final String ATT_REDIRECT_TO_HTTPS_REQUEST_MATCHER_REF = "redirect-to-https-request-matcher-ref";
+
 	static final String ATT_PATH_PATTERN = "pattern";
 
 	static final String ATT_HTTP_METHOD = "method";
@@ -240,6 +242,10 @@ public class HttpSecurityBeanDefinitionParser implements BeanDefinitionParser {
 	}
 
 	private RuntimeBeanReference createPortResolver(BeanReference portMapper, ParserContext pc) {
+		String beanName = "portResolver";
+		if (pc.getRegistry().containsBeanDefinition(beanName)) {
+			return new RuntimeBeanReference(beanName);
+		}
 		RootBeanDefinition portResolver = new RootBeanDefinition(PortResolverImpl.class);
 		portResolver.getPropertyValues().addPropertyValue("portMapper", portMapper);
 		String portResolverName = pc.getReaderContext().generateBeanName(portResolver);

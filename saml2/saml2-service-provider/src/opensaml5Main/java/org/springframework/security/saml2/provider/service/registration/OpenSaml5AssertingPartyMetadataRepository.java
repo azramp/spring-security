@@ -26,8 +26,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
-import javax.annotation.Nonnull;
-
 import net.shibboleth.shared.resolver.CriteriaSet;
 import org.opensaml.core.criterion.EntityIdCriterion;
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
@@ -266,7 +264,7 @@ public final class OpenSaml5AssertingPartyMetadataRepository implements Assertin
 				return this.resource.getFile();
 			}
 
-			@Nonnull
+			@NonNull
 			@Override
 			public InputStream getInputStream() throws IOException {
 				return this.resource.getInputStream();

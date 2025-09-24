@@ -16,15 +16,18 @@
 
 package org.springframework.security.saml2.provider.service.web;
 
+import java.util.Map;
+
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.server.PathContainer;
+import org.springframework.http.server.RequestPath;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistration;
 import org.springframework.security.saml2.provider.service.registration.RelyingPartyRegistrationRepository;
 import org.springframework.security.saml2.provider.service.web.RelyingPartyRegistrationPlaceholderResolvers.UriResolver;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 
@@ -43,7 +46,25 @@ public final class DefaultRelyingPartyRegistrationResolver
 
 	private final RelyingPartyRegistrationRepository relyingPartyRegistrationRepository;
 
-	private final RequestMatcher registrationRequestMatcher = new AntPathRequestMatcher("/**/{registrationId}");
+	private final RequestMatcher registrationRequestMatcher = new RequestMatcher() {
+		@Override
+		public boolean matches(HttpServletRequest request) {
+			return matcher(request).isMatch();
+		}
+
+		@Override
+		public MatchResult matcher(HttpServletRequest request) {
+			RequestPath path = RequestPath.parse(request.getRequestURI(), request.getContextPath());
+			PathContainer contextPath = path.contextPath();
+			PathContainer relativePath = path.subPath(contextPath.elements().size());
+			int size = relativePath.elements().size();
+			if (size > 0) {
+				return RequestMatcher.MatchResult
+					.match(Map.of("registrationId", relativePath.elements().get(size - 1).value()));
+			}
+			return RequestMatcher.MatchResult.notMatch();
+		}
+	};
 
 	public DefaultRelyingPartyRegistrationResolver(
 			RelyingPartyRegistrationRepository relyingPartyRegistrationRepository) {

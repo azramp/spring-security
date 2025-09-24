@@ -23,6 +23,7 @@ import java.security.cert.X509Certificate;
  *
  * @author Luke Taylor
  */
+@FunctionalInterface
 public interface X509PrincipalExtractor {
 
 	/**

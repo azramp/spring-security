@@ -52,7 +52,7 @@ import org.springframework.web.client.RestTemplate;
  * 4.1 Using Assertions as Authorization Grants</a>
  * @deprecated Use {@link RestClientJwtBearerTokenResponseClient} instead
  */
-@Deprecated(since = "6.4")
+@Deprecated(since = "6.4", forRemoval = true)
 public final class DefaultJwtBearerTokenResponseClient
 		implements OAuth2AccessTokenResponseClient<JwtBearerGrantRequest> {
 

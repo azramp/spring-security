@@ -52,7 +52,7 @@ import org.springframework.web.client.RestTemplate;
  * 2.2 Response</a>
  * @deprecated Use {@link RestClientRefreshTokenTokenResponseClient} instead
  */
-@Deprecated(since = "6.4")
+@Deprecated(since = "6.4", forRemoval = true)
 public final class DefaultTokenExchangeTokenResponseClient
 		implements OAuth2AccessTokenResponseClient<TokenExchangeGrantRequest> {
 

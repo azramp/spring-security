@@ -195,8 +195,10 @@ public abstract class AbstractAuthenticationTargetUrlRequestHandler {
 
 	/**
 	 * Allows overriding of the behaviour when redirecting to a target URL.
+	 * @param redirectStrategy {@link RedirectStrategy} to use
 	 */
 	public void setRedirectStrategy(RedirectStrategy redirectStrategy) {
+		Assert.notNull(redirectStrategy, "redirectStrategy cannot be null");
 		this.redirectStrategy = redirectStrategy;
 	}
 

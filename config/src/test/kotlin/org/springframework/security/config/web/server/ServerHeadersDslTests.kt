@@ -37,6 +37,7 @@ import org.springframework.security.web.server.header.XFrameOptionsServerHttpHea
 import org.springframework.security.web.server.header.XXssProtectionServerHttpHeadersWriter
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.config.EnableWebFlux
+import reactor.core.publisher.Mono
 
 /**
  * Tests for [ServerHeadersDsl]
@@ -193,6 +194,50 @@ class ServerHeadersDslTests {
                     }
                     crossOriginResourcePolicy {
                         policy = CrossOriginResourcePolicyServerHttpHeadersWriter.CrossOriginResourcePolicy.SAME_ORIGIN
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `request when custom server http headers writer configured then custom http headers added`() {
+        this.spring.register(ServerHttpHeadersWriterCustomConfig::class.java).autowire()
+
+        this.client.get()
+            .uri("/")
+            .exchange()
+            .expectHeader().valueEquals("CUSTOM-HEADER-1", "CUSTOM-VALUE-1")
+            .expectHeader().valueEquals("CUSTOM-HEADER-2", "CUSTOM-VALUE-2")
+    }
+
+    @Configuration
+    @EnableWebFluxSecurity
+    @EnableWebFlux
+    open class ServerHttpHeadersWriterCustomConfig {
+        @Bean
+        open fun springWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
+            return http {
+                headers {
+                    writer { exchange ->
+                        Mono.just(exchange)
+                            .doOnNext {
+                                it.response.headers.add(
+                                    "CUSTOM-HEADER-1",
+                                    "CUSTOM-VALUE-1"
+                                )
+                            }
+                            .then()
+                    }
+                    writer { exchange ->
+                        Mono.just(exchange)
+                            .doOnNext {
+                                it.response.headers.add(
+                                    "CUSTOM-HEADER-2",
+                                    "CUSTOM-VALUE-2"
+                                )
+                            }
+                            .then()
                     }
                 }
             }

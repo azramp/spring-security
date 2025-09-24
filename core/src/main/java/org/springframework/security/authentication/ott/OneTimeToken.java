@@ -16,6 +16,7 @@
 
 package org.springframework.security.authentication.ott;
 
+import java.io.Serializable;
 import java.time.Instant;
 
 /**
@@ -24,7 +25,7 @@ import java.time.Instant;
  * @author Marcus da Coregio
  * @since 6.4
  */
-public interface OneTimeToken {
+public interface OneTimeToken extends Serializable {
 
 	/**
 	 * @return the one-time token value, never {@code null}

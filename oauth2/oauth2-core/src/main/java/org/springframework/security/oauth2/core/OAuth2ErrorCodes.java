@@ -139,6 +139,15 @@ public final class OAuth2ErrorCodes {
 	 */
 	public static final String INVALID_REDIRECT_URI = "invalid_redirect_uri";
 
+	/**
+	 * {@code invalid_dpop_proof} - The DPoP Proof JWT is invalid.
+	 *
+	 * @since 6.5
+	 * @see <a href="https://datatracker.ietf.org/doc/html/rfc9449">RFC-9449 - OAuth 2.0
+	 * Demonstrating Proof of Possession (DPoP)</a>
+	 */
+	public static final String INVALID_DPOP_PROOF = "invalid_dpop_proof";
+
 	private OAuth2ErrorCodes() {
 	}
 

@@ -27,6 +27,7 @@ import org.springframework.util.PathMatcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
 
 public class SimpDestinationMessageMatcherTests {
 
@@ -127,6 +128,14 @@ public class SimpDestinationMessageMatcherTests {
 		this.matcher = SimpDestinationMessageMatcher.createMessageMatcher("/match", this.pathMatcher);
 		MessageMatcher<Object> expectedTypeMatcher = new SimpMessageTypeMatcher(SimpMessageType.MESSAGE);
 		assertThat(this.matcher.getMessageTypeMatcher()).isEqualTo(expectedTypeMatcher);
+	}
+
+	@Test
+	public void extractPathVariablesWhenNoMatchThenIllegalState() {
+		this.matcher = new SimpDestinationMessageMatcher("/nomatch");
+		this.messageBuilder.setHeader(SimpMessageHeaderAccessor.DESTINATION_HEADER, "/destination/1");
+		assertThatIllegalStateException()
+			.isThrownBy(() -> this.matcher.extractPathVariables(this.messageBuilder.build()));
 	}
 
 }

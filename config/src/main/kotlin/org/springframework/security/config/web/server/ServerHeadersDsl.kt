@@ -17,6 +17,7 @@
 package org.springframework.security.config.web.server
 
 import org.springframework.security.web.server.header.CacheControlServerHttpHeadersWriter
+import org.springframework.security.web.server.header.ServerHttpHeadersWriter
 import org.springframework.security.web.server.header.ContentTypeOptionsServerHttpHeadersWriter
 import org.springframework.security.web.server.header.ReferrerPolicyServerHttpHeadersWriter
 import org.springframework.security.web.server.header.StrictTransportSecurityServerHttpHeadersWriter
@@ -43,6 +44,7 @@ class ServerHeadersDsl {
     private var crossOriginOpenerPolicy: ((ServerHttpSecurity.HeaderSpec.CrossOriginOpenerPolicySpec) -> Unit)? = null
     private var crossOriginEmbedderPolicy: ((ServerHttpSecurity.HeaderSpec.CrossOriginEmbedderPolicySpec) -> Unit)? = null
     private var crossOriginResourcePolicy: ((ServerHttpSecurity.HeaderSpec.CrossOriginResourcePolicySpec) -> Unit)? = null
+    private var writers = mutableListOf<ServerHttpHeadersWriter>()
 
     private var disabled = false
 
@@ -199,6 +201,16 @@ class ServerHeadersDsl {
     }
 
     /**
+     * Configures custom headers writer
+     *
+     * @since 6.5
+     * @param writer the [ServerHttpHeadersWriter] to provide custom headers writer
+     */
+    fun writer(writer: ServerHttpHeadersWriter) {
+        this.writers.add(writer)
+    }
+
+    /**
      * Disables HTTP response headers.
      */
     fun disable() {
@@ -243,6 +255,9 @@ class ServerHeadersDsl {
             }
             crossOriginResourcePolicy?.also {
                 headers.crossOriginResourcePolicy(crossOriginResourcePolicy)
+            }
+            writers.also {
+                writers.forEach { writer -> headers.writer(writer) }
             }
             if (disabled) {
                 headers.disable()

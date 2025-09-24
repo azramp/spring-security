@@ -16,6 +16,7 @@
 
 package org.springframework.security.authentication.ott;
 
+import java.io.Serial;
 import java.time.Instant;
 
 import org.springframework.util.Assert;
@@ -27,6 +28,9 @@ import org.springframework.util.Assert;
  * @since 6.4
  */
 public class DefaultOneTimeToken implements OneTimeToken {
+
+	@Serial
+	private static final long serialVersionUID = -1545822943352278549L;
 
 	private final String token;
 

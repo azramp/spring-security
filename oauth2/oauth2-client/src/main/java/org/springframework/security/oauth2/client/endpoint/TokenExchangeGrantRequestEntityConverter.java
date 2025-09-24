@@ -41,7 +41,7 @@ import org.springframework.util.StringUtils;
  * 1.1 Delegation vs. Impersonation Semantics</a>
  * @deprecated Use {@link DefaultOAuth2TokenRequestParametersConverter} instead
  */
-@Deprecated(since = "6.4")
+@Deprecated(since = "6.4", forRemoval = true)
 public class TokenExchangeGrantRequestEntityConverter
 		extends AbstractOAuth2AuthorizationGrantRequestEntityConverter<TokenExchangeGrantRequest> {
 

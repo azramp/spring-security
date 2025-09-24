@@ -16,6 +16,8 @@
 
 package org.springframework.security.authentication.ott;
 
+import java.time.Duration;
+
 import org.springframework.util.Assert;
 
 /**
@@ -26,15 +28,29 @@ import org.springframework.util.Assert;
  */
 public class GenerateOneTimeTokenRequest {
 
+	private static final Duration DEFAULT_EXPIRES_IN = Duration.ofMinutes(5);
+
 	private final String username;
 
+	private final Duration expiresIn;
+
 	public GenerateOneTimeTokenRequest(String username) {
+		this(username, DEFAULT_EXPIRES_IN);
+	}
+
+	public GenerateOneTimeTokenRequest(String username, Duration expiresIn) {
 		Assert.hasText(username, "username cannot be empty");
+		Assert.notNull(expiresIn, "expiresIn cannot be null");
 		this.username = username;
+		this.expiresIn = expiresIn;
 	}
 
 	public String getUsername() {
 		return this.username;
+	}
+
+	public Duration getExpiresIn() {
+		return this.expiresIn;
 	}
 
 }

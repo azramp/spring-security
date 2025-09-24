@@ -26,6 +26,7 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.authorization.AuthenticatedAuthorizationManager;
 import org.springframework.security.authorization.AuthorityAuthorizationManager;
 import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.SingleResultAuthorizationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -55,7 +56,7 @@ public class RequestMatcherDelegatingAuthorizationManagerTests {
 	public void addWhenMatcherNullThenException() {
 		assertThatIllegalArgumentException()
 			.isThrownBy(() -> RequestMatcherDelegatingAuthorizationManager.builder()
-				.add(null, (a, o) -> new AuthorizationDecision(true))
+				.add(null, SingleResultAuthorizationManager.permitAll())
 				.build())
 			.withMessage("matcher cannot be null");
 	}
@@ -72,8 +73,8 @@ public class RequestMatcherDelegatingAuthorizationManagerTests {
 	@Test
 	public void checkWhenMultipleMappingsConfiguredThenDelegatesMatchingManager() {
 		RequestMatcherDelegatingAuthorizationManager manager = RequestMatcherDelegatingAuthorizationManager.builder()
-			.add(new MvcRequestMatcher(null, "/grant"), (a, o) -> new AuthorizationDecision(true))
-			.add(new MvcRequestMatcher(null, "/deny"), (a, o) -> new AuthorizationDecision(false))
+			.add(new MvcRequestMatcher(null, "/grant"), SingleResultAuthorizationManager.permitAll())
+			.add(new MvcRequestMatcher(null, "/deny"), SingleResultAuthorizationManager.denyAll())
 			.build();
 
 		Supplier<Authentication> authentication = () -> new TestingAuthenticationToken("user", "password", "ROLE_USER");
@@ -97,11 +98,11 @@ public class RequestMatcherDelegatingAuthorizationManagerTests {
 		RequestMatcherDelegatingAuthorizationManager manager = RequestMatcherDelegatingAuthorizationManager.builder()
 			.mappings((m) -> {
 				m.add(new RequestMatcherEntry<>(new MvcRequestMatcher(null, "/grant"),
-						(a, o) -> new AuthorizationDecision(true)));
+						SingleResultAuthorizationManager.permitAll()));
 				m.add(new RequestMatcherEntry<>(AnyRequestMatcher.INSTANCE,
 						AuthorityAuthorizationManager.hasRole("ADMIN")));
 				m.add(new RequestMatcherEntry<>(new MvcRequestMatcher(null, "/afterAny"),
-						(a, o) -> new AuthorizationDecision(true)));
+						SingleResultAuthorizationManager.permitAll()));
 			})
 			.build();
 

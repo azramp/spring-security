@@ -19,6 +19,7 @@ package org.springframework.security.config.annotation.web.configurers;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.security.access.SecurityConfig;
+import org.springframework.security.authorization.SingleResultAuthorizationManager;
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder;
 import org.springframework.security.config.annotation.web.configurers.AbstractConfigAttributeRequestMatcherRegistry.UrlMapping;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -63,7 +64,7 @@ final class PermitAllSupport {
 								SecurityConfig.createList(ExpressionUrlAuthorizationConfigurer.permitAll)));
 				}
 				else {
-					httpConfigurer.addFirst(matcher, AuthorizeHttpRequestsConfigurer.permitAllAuthorizationManager);
+					httpConfigurer.addFirst(matcher, SingleResultAuthorizationManager.permitAll());
 				}
 			}
 		}

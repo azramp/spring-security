@@ -59,6 +59,10 @@ public final class TestJwks {
 	private TestJwks() {
 	}
 
+	public static RSAKey.Builder rsa() {
+		return jwk(TestKeys.DEFAULT_PUBLIC_KEY, TestKeys.DEFAULT_PRIVATE_KEY);
+	}
+
 	public static RSAKey.Builder jwk(RSAPublicKey publicKey, RSAPrivateKey privateKey) {
 		// @formatter:off
 		return new RSAKey.Builder(publicKey)

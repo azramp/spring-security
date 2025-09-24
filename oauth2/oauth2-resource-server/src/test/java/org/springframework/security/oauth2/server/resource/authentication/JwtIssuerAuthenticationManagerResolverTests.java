@@ -36,6 +36,7 @@ import org.mockito.MockedStatic;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationManagerResolver;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.jose.TestKeys;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -43,10 +44,12 @@ import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.jwt.TestJwts;
+import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.mock;
 import static org.mockito.BDDMockito.verify;
@@ -190,6 +193,19 @@ public class JwtIssuerAuthenticationManagerResolverTests {
 				)
 				.withMessage("Invalid issuer");
 		// @formatter:on
+	}
+
+	@Test
+	public void resolveWhenAuthenticationExceptionThenAuthenticationRequestIsIncluded() {
+		Authentication authentication = new BearerTokenAuthenticationToken(this.jwt);
+		AuthenticationException ex = new InvalidBearerTokenException("");
+		AuthenticationManager manager = mock(AuthenticationManager.class);
+		given(manager.authenticate(any())).willThrow(ex);
+		JwtIssuerAuthenticationManagerResolver resolver = new JwtIssuerAuthenticationManagerResolver(
+				(issuer) -> manager);
+		assertThatExceptionOfType(InvalidBearerTokenException.class)
+			.isThrownBy(() -> resolver.resolve(null).authenticate(authentication));
+		assertThat(ex.getAuthenticationRequest()).isEqualTo(authentication);
 	}
 
 	@Test

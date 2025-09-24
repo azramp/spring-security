@@ -28,7 +28,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.web.authentication.ott.OneTimeTokenAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -43,11 +45,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 public final class DefaultOneTimeTokenSubmitPageGeneratingFilter extends OncePerRequestFilter {
 
-	private RequestMatcher requestMatcher = new AntPathRequestMatcher("/login/ott", "GET");
+	public static final String DEFAULT_SUBMIT_PAGE_URL = "/login/ott";
+
+	private RequestMatcher requestMatcher = PathPatternRequestMatcher.withDefaults()
+		.matcher(HttpMethod.GET, DEFAULT_SUBMIT_PAGE_URL);
 
 	private Function<HttpServletRequest, Map<String, String>> resolveHiddenInputs = (request) -> Collections.emptyMap();
 
-	private String loginProcessingUrl = "/login/ott";
+	private String loginProcessingUrl = OneTimeTokenAuthenticationFilter.DEFAULT_LOGIN_PROCESSING_URL;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)

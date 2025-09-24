@@ -39,7 +39,7 @@ import org.springframework.util.StringUtils;
  * 2.1 Using JWTs as Authorization Grants</a>
  * @deprecated Use {@link DefaultOAuth2TokenRequestParametersConverter} instead
  */
-@Deprecated(since = "6.4")
+@Deprecated(since = "6.4", forRemoval = true)
 public class JwtBearerGrantRequestEntityConverter
 		extends AbstractOAuth2AuthorizationGrantRequestEntityConverter<JwtBearerGrantRequest> {
 

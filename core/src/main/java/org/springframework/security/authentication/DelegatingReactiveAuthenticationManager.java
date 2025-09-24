@@ -26,6 +26,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.util.Assert;
 
 /**
@@ -58,6 +59,7 @@ public class DelegatingReactiveAuthenticationManager implements ReactiveAuthenti
 	public Mono<Authentication> authenticate(Authentication authentication) {
 		Flux<ReactiveAuthenticationManager> result = Flux.fromIterable(this.delegates);
 		Function<ReactiveAuthenticationManager, Mono<Authentication>> logging = (m) -> m.authenticate(authentication)
+			.doOnError(AuthenticationException.class, (ex) -> ex.setAuthenticationRequest(authentication))
 			.doOnError(this.logger::debug);
 
 		return ((this.continueOnError) ? result.concatMapDelayError(logging) : result.concatMap(logging)).next();

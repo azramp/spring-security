@@ -25,6 +25,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 /**
  * @author Dayan Kodippily
@@ -106,6 +107,11 @@ public class AbstractAuthenticationTargetUrlRequestHandlerTests {
 		this.handler.setUseReferer(false);
 		this.request.addHeader("Referer", REFERER_URL);
 		assertThat(this.handler.determineTargetUrl(this.request, this.response)).isEqualTo(DEFAULT_TARGET_URL);
+	}
+
+	@Test
+	void setRedirectStrategyWhenGivenNullThenThrowsException() {
+		assertThatIllegalArgumentException().isThrownBy(() -> this.handler.setRedirectStrategy(null));
 	}
 
 }

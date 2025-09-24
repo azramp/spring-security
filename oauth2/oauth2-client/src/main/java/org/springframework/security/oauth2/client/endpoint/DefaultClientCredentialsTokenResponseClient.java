@@ -54,7 +54,7 @@ import org.springframework.web.client.RestTemplate;
  * (Client Credentials Grant)</a>
  * @deprecated Use {@link RestClientClientCredentialsTokenResponseClient} instead
  */
-@Deprecated(since = "6.4")
+@Deprecated(since = "6.4", forRemoval = true)
 public final class DefaultClientCredentialsTokenResponseClient
 		implements OAuth2AccessTokenResponseClient<OAuth2ClientCredentialsGrantRequest> {
 
